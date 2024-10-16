@@ -1,0 +1,264 @@
+---
+title: Integrating Statsig with Supabase in a React Application
+sidebar_label: Supabase
+slug: /client/javascript-sdk/statsig-with-supabase-in-react
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+This tutorial will guide you through the process of integrating Statsig with Supabase in a React application. We'll create a simple app that demonstrates feature flagging and event logging.
+
+## Prerequisites
+
+Before we begin, make sure you have the following:
+
+- Node.js and npm installed on your machine
+- Basic knowledge of React
+
+## Setting up Supabase
+
+1. Sign up for a Supabase account at [https://supabase.com](https://supabase.com) if you haven't already.
+
+2. Create a new project in Supabase:
+
+   - Click on "New Project"
+   - Choose a name for your project
+   - Set up a strong database password
+   - Select a region closest to your users
+   - Click "Create new project"
+
+3. Once your project is created, go to the project dashboard.
+
+4. In the left sidebar, click on "Settings" and then "API".
+
+5. You'll find your project URL and anon public key here. We'll use these later in our React application.
+
+6. Set up a "users" table in your Supabase database:
+   - Go to the "Table editor" in the left sidebar
+   - Click "Create a new table"
+   - Name it "users"
+   - Add columns for "id" (use the UUID type), "username" (text), and any other fields you need
+   - Click "Save" to create the table
+
+## Setting up Statsig
+
+1. Sign up for a Statsig account at [https://statsig.com](https://statsig.com) if you haven't already.
+
+2. Create a new project in Statsig:
+
+   - Click on "Create a project"
+   - Choose a name for your project
+   - Select your development environment
+
+3. Once your project is created, go to the project dashboard.
+
+4. In the left sidebar, click on "Settings" and then "API Keys".
+
+5. You'll find your Client SDK Key here. We'll use this later in our React application.
+
+6. Create a feature gate:
+   - In the left sidebar, click on "Feature Gates"
+   - Click "Create New Gate"
+   - Name it "count_click" (to match our example code)
+   - Configure the gate as needed (e.g., you might want to set it to 50% for A/B testing)
+   - Click "Create" to save the gate
+
+Now that we have Supabase and Statsig set up, let's integrate them into a React application.
+
+## Step 1: Setting up the Project
+
+First, let's create a new React project and install the necessary dependencies:
+
+```bash
+npx create-react-app statsig-supabase-demo
+cd statsig-supabase-demo
+npm install @supabase/supabase-js @statsig/react-bindings
+```
+
+## Step 2: Setting up Environment Variables
+
+Create a `.env` file in the root of your project and add your Supabase and Statsig credentials:
+
+```
+REACT_APP_SUPABASE_URL=your_supabase_url
+REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
+REACT_APP_STATSIG_CLIENT_KEY=your_statsig_client_key
+```
+
+Replace `your_supabase_url`, `your_supabase_anon_key`, and `your_statsig_client_key` with your actual credentials.
+
+## Step 3: Creating the Application
+
+Replace the contents of `src/App.js` with the following code:
+
+```jsx
+import "./App.css";
+import { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
+import {
+  StatsigProvider,
+  useStatsigUser,
+  useStatsigClient,
+  useGateValue,
+} from "@statsig/react-bindings";
+
+const supabase = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_ANON_KEY
+);
+
+function App() {
+  return (
+    <StatsigProvider sdkKey={process.env.REACT_APP_STATSIG_CLIENT_KEY}>
+      <Demo />
+    </StatsigProvider>
+  );
+}
+
+function Demo() {
+  const { client } = useStatsigClient();
+  const { updateUserSync } = useStatsigUser();
+  const hasFeatureAccess = useGateValue("count_click");
+
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    async function getUsers() {
+      const { data, error } = await supabase.from("users").select();
+      if (error) {
+        console.error("Error fetching users:", error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const currentUser = data[0];
+        updateUserSync({ userID: currentUser.username });
+      }
+    }
+    getUsers();
+  }, []);
+
+  const handleClick = () => {
+    const newCount = count + 1;
+    setCount(newCount);
+    client.logEvent("clicked", { count: newCount });
+  };
+
+  return (
+    <div className="App">
+      <h2>
+        Count - {count} {hasFeatureAccess && "🎉"}
+      </h2>
+      <button onClick={handleClick}>Increment</button>
+      {hasFeatureAccess && <h2>Feature flag is on</h2>}
+    </div>
+  );
+}
+
+export default App;
+```
+
+## Step 4: Understanding the Code
+
+Let's break down the key parts of this integration:
+
+### Supabase Setup
+
+We initialize the Supabase client with our project URL and anonymous key:
+
+```jsx
+const supabase = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_ANON_KEY
+);
+```
+
+### Statsig Setup
+
+We wrap our app with `StatsigProvider`:
+
+```jsx
+<StatsigProvider sdkKey={process.env.REACT_APP_STATSIG_CLIENT_KEY}>
+  <Demo />
+</StatsigProvider>
+```
+
+This initializes Statsig and ensures that Statsig methods are always available in child components.
+
+### Fetching User Data
+
+We fetch user data from Supabase and update the Statsig user
+P.S. Here we can set the current logged user on our application as the Statsig user
+
+```jsx
+useEffect(() => {
+  async function getUsers() {
+    const { data, error } = await supabase.from("users").select();
+    if (error) {
+      console.error("Error fetching users:", error);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      const currentUser = data[0];
+      updateUserSync({ userID: currentUser.username });
+    }
+  }
+  getUsers();
+}, []);
+```
+
+### Feature Flag
+
+We use a Statsig gate to control access to a feature:
+
+```jsx
+const hasFeatureAccess = useGateValue("count_click");
+```
+
+### Event Logging
+
+We log events to Statsig when the button is clicked:
+
+```jsx
+const handleClick = () => {
+  const newCount = count + 1;
+  setCount(newCount);
+  client.logEvent("clicked", { count: newCount });
+};
+```
+
+## Step 5: Running the Application
+
+To run the application, use the following command:
+
+```bash
+npm start
+```
+
+Your application should now be running and integrated with both Supabase and Statsig!
+
+## Key Points
+
+1. We initialize the Supabase client with our project URL and anonymous key.
+2. We wrap our app with `StatsigProvider`.
+3. We fetch user data from Supabase and update the Statsig user.
+4. We use a Statsig gate to control access to a feature.
+5. We log events to Statsig when the button is clicked.
+
+## Next Steps
+
+1. Add more users to your Supabase "users" table to test different scenarios.
+2. Create more feature gates or experiments in Statsig to control different aspects of your application.
+3. Use Supabase Auth for user authentication and pass the authenticated user's information to Statsig.
+4. Explore more Supabase features like real-time subscriptions or storage.
+5. Dive deeper into Statsig's analytics capabilities to gain insights from the events you're logging.
+
+## Conclusion
+
+In this tutorial, we've created a React application that integrates Statsig for feature flagging and event logging, and Supabase for user data. This setup allows you to easily manage feature rollouts and track user interactions.
+
+Remember to set up your Statsig gates and experiments in the Statsig console, and to properly structure your Supabase database to match the queries in this example.
+
+Happy coding!

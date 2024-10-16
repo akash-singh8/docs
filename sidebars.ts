@@ -387,6 +387,12 @@ const sidebars: SidebarsConfig = {
           ],
         },
         {
+          type: "category",
+          label: "Tutorials",
+          className: "lightbulb-icon sidebar-icon",
+          items: ["client/javascript-mono/SupabaseUsage"],
+        },
+        {
           type: "doc",
           id: "faq",
           className: "question-icon sidebar-icon",
