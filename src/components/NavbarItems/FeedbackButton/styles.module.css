@@ -1,0 +1,100 @@
+/* Feedback Button Styles */
+.feedbackButton {
+  background-color: transparent;
+  border: 1px solid lightslategray;
+  transition: all 0.15s ease-out;
+}
+
+.feedbackButton:hover {
+  background-color: #4a4a4a;
+}
+
+/* Feedback Popup Styles */
+
+.popup {
+  position: fixed;
+  top: 65px;
+  right: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(48, 48, 48);
+  border: 0.5px solid rgb(61, 61, 61);
+  font-family: "Open Sans", sans-serif;
+  border-radius: 12px;
+  width: 320px;
+  box-shadow: 0 4px 6px rgba(73, 73, 73, 0.1);
+}
+
+.popupField {
+  width: 100%;
+  padding: 8px 8px 0;
+}
+
+.popupInput,
+.popupTextarea {
+  width: 100%;
+  padding: 0.6rem;
+  border: 0.5px solid rgb(68, 68, 68);
+  border-radius: 6px;
+  outline: none;
+  font-weight: 500;
+  background-color: transparent;
+  font-family: "Open Sans", sans-serif;
+}
+
+.popupInput::placeholder,
+.popupTextarea::placeholder {
+  color: rgb(147, 147, 147);
+}
+
+.popupTextarea {
+  resize: none;
+}
+
+.popupActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.06);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  width: 100%;
+}
+
+.popupButton {
+  font-size: 14px;
+  min-height: auto;
+  border-radius: 6px;
+  font-weight: 500;
+  padding: 5px 14px;
+  background-color: #3b82f6;
+}
+
+.emojis {
+  display: flex;
+  gap: 4px;
+  height: 28px;
+}
+
+.emojis > span {
+  font-size: 16px;
+  text-align: center;
+  width: 29px;
+  border-radius: 50%;
+  background-color: transparent;
+  cursor: pointer;
+  transition: transform 0.2s;
+  transition: all 0.1s ease-in-out;
+}
+
+.emojis > span:hover {
+  background-color: rgb(71, 71, 71);
+}
+
+.selected {
+  background-color: rgb(100, 100, 100) !important;
+}

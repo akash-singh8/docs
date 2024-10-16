@@ -370,6 +370,7 @@ const config: Config = {
           type: "html",
           value:
             "<button class=\"signupCTA CTA\" onclick=\"window.open('https://console.statsig.com', '_blank').focus();\">Get Started</button>",
+          position: "right",
         },
       ],
     },
